@@ -5,5 +5,5 @@ FORMATS = {
     'csv': ','
     , 'tsv': '\t'
     , 'psv': '|'
-    , 'ppsv': '||'
+    , 'ppsv': '|#|#|'
 }
