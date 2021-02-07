@@ -29,7 +29,13 @@ parser.add_argument("-p",
                     default='',
 )
 
-parser.add_argument("-h",
+parser.add_argument("-D",
+                    "--debug",
+                    help="set debugging mode on",
+                    action='store_true',
+)
+
+parser.add_argument("-H",
                     "--header",
                     help="use column headers as part of output filenames",
                     action='store_true',
@@ -43,6 +49,10 @@ parser.add_argument("input_",
 
 args = parser.parse_args(sys.argv)
 print(parser.prog, args)
+
+if args.debug:
+    log.setLevel(logging.DEBUG)
+
 
 args.input_ = args.input_[1]
 
@@ -66,17 +76,26 @@ with open(args.input_) as input_file:
     column_count = [len(line) for line in lines]
     fields_count = sum(column_count)
     lines_count = len(lines)
-    pprint(list(
-        i for i in enumerate(column_count) if i[1] != 2
-    ))
+    log.debug( "lengths of lines " + pformat( list(
+        (i, count) for i, count in enumerate(column_count) if count != column_count[0]
+    )))
+
     assert fields_count % lines_count == 0, \
         '{} % {} = {}'.format(fields_count, lines_count, fields_count % lines_count)
 
     content = list(zip(*lines))
 
     print('total number of columns: {}'.format(len(content)))
-   
-    for i, c in enumerate(content):
-        with open('{}-col{:04d}.{}'.format(args.prefix, i, ext), 'w') as output_file:
+
+    if args.header:
+        output_filepaths = ['{}-col{:04d}-{}.{}'.format(args.prefix, i, c[0], ext)
+                            for i, c in enumerate(content) ]
+
+    else:
+        output_filepaths = ['{}-col{:04d}.{}'.format(args.prefix, i, ext)
+                            for i, c in enumerate(content) ]
+
+    for filepath, c in zip(output_filepaths, content):
+        with open(filepath, 'w') as output_file:
             log.debug(pformat(c))
             output_file.write('\n'.join(c))
